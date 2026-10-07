@@ -3,6 +3,7 @@ import cloudinary
 import cloudinary.uploader
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
 load_dotenv()
@@ -20,6 +21,13 @@ app = FastAPI(
     description="Backend oficial con FastAPI, PostgreSQL y Cloudinary",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def inicio():
