@@ -9,7 +9,7 @@ load_dotenv()
 # Aquí se leerá la URL de tu base de datos PostgreSQL desde tu archivo .env
 # Ejemplo: postgresql://usuario:contraseña@localhost:5432/nombre_base_datos
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:password@localhost:5432/collinscafe"
+    "DATABASE_URL"
 )
 
 engine = create_engine(DATABASE_URL)

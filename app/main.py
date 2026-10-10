@@ -10,9 +10,9 @@ load_dotenv()
 
 # 2. Configuramos Cloudinary utilizando las credenciales del servidor (¡Seguro!)
 cloudinary.config(
-    cloud_name=os.getenv("a7viibbv"),
-    api_key=os.getenv("566442886139216"),
-    api_secret=os.getenv("e6-V243A0VDEBG58a5fu_JNyhhQ"),
+    cloud_name=os.getenv("CLOUDBINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDBINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDBINARY_API_SECRET"),
 )
 
 # Inicializamos la aplicación de FastAPI
