@@ -1,33 +1,25 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
 
 class RolBase(BaseModel):
     nombre: str = Field(
-        min_length= 2,
-        max_length= 50
+        min_length= 1,
+        max_length= 100
     )
-    descripcion: Optional[str] = Field(
-        default= None,
-        max_length= 255
-    )
+    descripcion: str | None = None
 
 class RolCreate(RolBase):
     pass
 
-class RolUpdate(BaseModel):
-    nombre: Optional[str] = Field(
-        default= None,
-        min_length= 2,
-        max_length= 50
+class RolActualizar(BaseModel):
+    nombre: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100
     )
-    descripcion: Optional[str] = Field(
-        default= None,
-        max_length= 255
-    )
+    descripcion: str | None = None
 
 class RolResponse(RolBase):
     id: int
-    created_at: Optional[str] = None
 
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(from_attributes=True)
     
