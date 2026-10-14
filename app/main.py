@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from Modelos.Roles.Routers.roles import router as roles_router
+from Modelos.Usuarios.Routers.usuarios import router as usuarios_router
 
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
 load_dotenv()
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(roles_router)
+app.include_router(usuarios_router)
 
 @app.get("/")
 def inicio():
