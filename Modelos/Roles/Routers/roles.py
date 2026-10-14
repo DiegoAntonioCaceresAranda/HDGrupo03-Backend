@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.database import get_db
-from Models.rol import Rol
+from Modelos.Roles.Models.rol import Rol
 from ..Schemas.Rol import RolCreate, RolActualizar, RolResponse
 
 router = APIRouter (
@@ -39,8 +39,9 @@ def crear_rol(datos: RolCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(rol)
         return rol
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
+        print("Error de integridad al crear rol:", repr(e.orig))
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Ya existe un rol con ese nombre"

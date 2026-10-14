@@ -19,7 +19,8 @@ class RolActualizar(BaseModel):
     descripcion: str | None = None
 
 class RolResponse(RolBase):
-    id: int
-
+    id_rol: int
+    nombre: str
+    descripcion: str | None = None
     model_config = ConfigDict(from_attributes=True)
     

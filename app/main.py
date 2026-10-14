@@ -4,6 +4,7 @@ import cloudinary.uploader
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from Modelos.Roles.Routers.roles import router as roles_router
 
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
 load_dotenv()
@@ -28,6 +29,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(roles_router)
 
 @app.get("/")
 def inicio():
