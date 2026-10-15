@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from Modelos.Dashboard.Routers.dashboard import router as dashboard_router
+from Modelos.Reportes.Routers.reportes import router as reportes_router
+
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
@@ -30,6 +33,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(dashboard_router)
+app.include_router(reportes_router)
 
 @app.get("/")
 def inicio():
