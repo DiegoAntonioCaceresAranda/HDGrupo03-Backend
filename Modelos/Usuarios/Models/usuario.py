@@ -8,7 +8,7 @@ class Usuario(Base):
     codigo = Column(String, unique=True, nullable=False)
     nombre = Column(String, nullable=False)
     correo = Column(String, unique=True, nullable=False)
-    contraseña = Column(String, nullable=False)
+    password = Column(String, nullable=False)
     estado = Column(String, default="Activo", nullable=False)
 
     id_rol = Column(Integer, ForeignKey("rol.id_rol"), nullable=False)

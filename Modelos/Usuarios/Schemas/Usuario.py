@@ -5,7 +5,7 @@ class UsuarioCreate(BaseModel):
     codigo: str
     nombre: str
     correo: EmailStr
-    contraseña: str
+    password: str
     estado: str = "Activo"
     id_rol: int
 
@@ -13,7 +13,7 @@ class UsuarioUpdate(BaseModel):
     codigo: Optional[str] = None
     nombre: Optional[str] = None
     correo: Optional[EmailStr] = None
-    contraseña: Optional[str] = None
+    password: Optional[str] = None
     estado: Optional[str] = None
     id_rol: Optional[int] = None
 
