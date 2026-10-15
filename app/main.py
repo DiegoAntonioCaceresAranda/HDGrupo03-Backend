@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import cloudinary
 import cloudinary.uploader
 from dotenv import load_dotenv
@@ -6,7 +8,7 @@ from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 # 2. Configuramos Cloudinary utilizando las credenciales del servidor (¡Seguro!)
 cloudinary.config(
