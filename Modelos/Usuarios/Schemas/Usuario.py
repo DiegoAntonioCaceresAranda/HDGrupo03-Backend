@@ -2,7 +2,6 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional
 
 class UsuarioCreate(BaseModel):
-    codigo: str
     nombre: str
     correo: EmailStr
     password: str
@@ -10,7 +9,6 @@ class UsuarioCreate(BaseModel):
     id_rol: int
 
 class UsuarioUpdate(BaseModel):
-    codigo: Optional[str] = None
     nombre: Optional[str] = None
     correo: Optional[EmailStr] = None
     password: Optional[str] = None

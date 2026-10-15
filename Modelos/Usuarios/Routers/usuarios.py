@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pwdlib import PasswordHash
@@ -31,17 +32,18 @@ def crear_usuario(
     datos: UsuarioCreate,
     db: Session = Depends(get_db)
 ):
-    duplicado = db.query(Usuario).filter(
-        (Usuario.codigo == datos.codigo) |
-        (Usuario.correo == str(datos.correo))
+    # Verificar si el correo ya existe
+    existente = db.query(Usuario).filter(
+        Usuario.correo == str(datos.correo)
     ).first()
 
-    if duplicado:
+    if existente:
         raise HTTPException(
             status_code=409,
-            detail="El código o correo ya está registrado"
+            detail="El correo ya está registrado"
         )
 
+    # Verificar que el rol exista
     rol = db.query(Rol).filter(
         Rol.id_rol == datos.id_rol
     ).first()
@@ -52,25 +54,44 @@ def crear_usuario(
             detail="El rol seleccionado no existe"
         )
 
-    nuevo_usuario = Usuario(
-        codigo=datos.codigo,
-        nombre=datos.nombre,
-        correo=str(datos.correo),
-        password=password_hash.hash(datos.password),
-        estado=datos.estado,
-        id_rol=datos.id_rol
-    )
-
     try:
+        # Obtener el siguiente ID de PostgreSQL
+        nuevo_id = db.execute(
+            text("""
+                SELECT nextval(
+                    pg_get_serial_sequence(
+                        'public.usuario',
+                        'id_usuario'
+                    )
+                )
+            """)
+        ).scalar_one()
+
+        # Generar el código a partir del ID
+        codigo = f"USR-{nuevo_id:03d}"
+
+        nuevo_usuario = Usuario(
+            id_usuario=nuevo_id,
+            codigo=codigo,
+            nombre=datos.nombre,
+            correo=str(datos.correo),
+            password=password_hash.hash(datos.password),
+            estado=datos.estado,
+            id_rol=datos.id_rol
+        )
+
         db.add(nuevo_usuario)
         db.commit()
         db.refresh(nuevo_usuario)
+
         return nuevo_usuario
+
     except IntegrityError:
         db.rollback()
         raise HTTPException(
             status_code=409,
-            detail="El código o correo ya está registrado"
+            detail="No se pudo crear el usuario. "
+                   "Verifica que el correo y el código sean únicos."
         )
 
 # Actualizar usuario
