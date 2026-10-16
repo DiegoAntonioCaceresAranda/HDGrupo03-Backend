@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pwdlib import PasswordHash
 from app.database import get_db
+from Modelos.Autenticacion.Models.security import hash_password
 from Modelos.Usuarios.Models.usuario import Usuario
 from Modelos.Roles.Models.rol import Rol
 from ..Schemas.Usuario import UsuarioCreate, UsuarioUpdate, UsuarioResponse
@@ -75,7 +76,7 @@ def crear_usuario(
             codigo=codigo,
             nombre=datos.nombre,
             correo=str(datos.correo),
-            password=password_hash.hash(datos.password),
+            password=hash_password(datos.password),
             estado=datos.estado,
             id_rol=datos.id_rol
         )
@@ -121,7 +122,7 @@ def actualizar_usuario(
         if not cambios["password"]:
             cambios.pop("password")
         else:
-            cambios["password"] = password_hash.hash(
+            cambios["password"] = hash_password(
                 cambios["password"]
             )
 

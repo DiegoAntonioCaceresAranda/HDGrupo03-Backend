@@ -4,6 +4,7 @@ import cloudinary.uploader
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from Modelos.Autenticacion.Routers.auth import router as auth_router
 from Modelos.Roles.Routers.roles import router as roles_router
 from Modelos.Usuarios.Routers.usuarios import router as usuarios_router
 
@@ -31,6 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(roles_router)
 app.include_router(usuarios_router)
 
