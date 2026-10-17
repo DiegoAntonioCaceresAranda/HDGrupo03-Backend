@@ -1,12 +1,13 @@
+from typing import Optional
 import cloudinary.uploader
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, File, Form, UploadFile
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.database import get_db
-from Modelos.Productos.Models.producto import Producto  
+from Modelos.Productos.Models.producto import Producto
 from Modelos.Categorias.Models.categoria import Categoria
-from ..Schemas.Producto import ProductoCreate, ProductoUpdate, ProductoResponse
+from ..Schemas.Producto import ProductoResponse
 
 
 
@@ -24,35 +25,48 @@ def listar_productos(db: Session = Depends(get_db)):
 
 # Crrear producto (POST)
 @router.post("/", response_model=ProductoResponse, status_code=201)
-def crear_producto(datos: ProductoCreate, db: Session = Depends(get_db)):
-    # Verificar si el nombre del producto ya existe
-    existente = db.query(Producto).filter(Producto.nombre == datos.nombre). first()
-    if existente:
-        raise HTTPException(status_code=409, detail="El producto ya está registrado")
-
-    # Verificar que la categoria exista
-    categoria = db.query(Categoria).filter(Categoria.id_categoria == datos.id_Categoria).first()
-    if categoria is None:
-        raise HTTPException(status_code=400, detail="La categoría seleccionada no existe")
+def crear_producto(
+    nombre: str = Form(...),
+    precio_venta: float = Form(...),
+    stock: int = Form(0),
+    id_categoria: Optional[int] = Form(None),
+    imagen: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db)
+):
+    # Verificar que la categoría exista si se envió una
+    if id_categoria is not None:
+        categoria = db.query(Categoria).filter(
+            Categoria.id_categoria == id_categoria
+        ).first()
+        if categoria is None:
+            raise HTTPException(status_code=400, detail="La categoría seleccionada no existe")
 
     try:
-        # Obtener el siguiente ID de PostgreSQL
+        # Subir imagen a Cloudinary si el usuario adjuntó un archivo
+        image_url = None
+        image_public_id = None
+
+        if imagen is not None and imagen.filename:
+            resultado = cloudinary.uploader.upload(imagen.file)
+            image_public_id = resultado.get("public_id")
+            image_url = resultado.get("secure_url")
+
+        # Obtener el siguiente ID de PostgreSQL y generar el código PROD-001
         nuevo_id = db.execute(
             text("SELECT nextval(pg_get_serial_sequence('public.producto', 'id_producto'))")
         ).scalar_one()
 
-        # Generar el código a partir del ID
         codigo = f"PROD-{nuevo_id:03d}"
 
         nuevo_producto = Producto(
             id_producto=nuevo_id,
             codigo=codigo,
-            nombre=datos.nombre,
-            precio_venta=datos.precio_venta,
-            stock=datos.stock,
-            imagen_url=datos.imagen_url,
-            estado=datos.estado,
-            id_categoria=datos.id_categoria
+            nombre=nombre,
+            precio_venta=precio_venta,
+            stock=stock,
+            id_categoria=id_categoria,
+            image_url=image_url,
+            image_public_id=image_public_id
         )
 
         db.add(nuevo_producto)
@@ -64,69 +78,78 @@ def crear_producto(datos: ProductoCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(
             status_code=409,
-            detail="No se pudo crear el producto. Verifica que el nombre y código sean únicos."
+            detail="No se pudo crear el producto. Verifica que el código sea único."
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al registrar el producto o subir la imagen: {str(e)}"
         )
 
-# Subir imagen de un producto a Cloudinary
-@router.post("/{id_producto}/imagen", response_model=ProductoResponse)
-def subir_imagen_producto(
+    
+@router.put("/{id_producto}", response_model=ProductoResponse)
+def actualizar_producto(
     id_producto: int,
-    imagen: UploadFile = File(...),
+    nombre: Optional[str] = Form(None),
+    precio_venta: Optional[float] = Form(None),
+    stock: Optional[int] = Form(None),
+    id_categoria: Optional[int] = Form(None),
+    imagen: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
     producto = db.query(Producto).filter(Producto.id_producto == id_producto).first()
     if producto is None:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    try:
-        resultado = cloudinary.uploader.upload(imagen.file)
-        producto.imagen_url = resultado.get("secure_url")
-        db.commit()
-        db.refresh(producto)
-        return producto
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al subir la imagen a Cloudinary: {str(e)}")
-
-# Actualizar producto
-@router.put("/{id_producto}", response_model=ProductoResponse)
-def actualizar_producto(id_producto: int, datos: ProductoUpdate, db: Session = Depends(get_db)):
-    producto = db.query(Producto).filter(Producto.id_producto == id_producto).first()
-    if producto is None:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    cambios = datos.model_dump(exclude_unset=True)
-
-    if "id_categoria" in cambios:
-        categoria = db.query(Categoria).filter(Categoria.id_categoria == cambios["id_categoria"]).first()
+    if id_categoria is not None:
+        categoria = db.query(Categoria).filter(
+            Categoria.id_categoria == id_categoria
+        ).first()
         if categoria is None:
             raise HTTPException(status_code=400, detail="La categoría seleccionada no existe")
+        producto.id_categoria = id_categoria
 
-    if "nombre" in cambios:
-        duplicado = db.query(Producto).filter(
-            Producto.nombre == cambios["nombre"],
-            Producto.id_producto != id_producto
-        ).first()
-        if duplicado:
-            raise HTTPException(status_code=409, detail="El nombre del producto ya está registrado")
+    if nombre is not None:
+        producto.nombre = nombre
+    if precio_venta is not None:
+        producto.precio_venta = precio_venta
+    if stock is not None:
+        producto.stock = stock
 
     try:
-        for campo, valor in cambios.items():
-            setattr(producto, campo, valor)
+        # Si envían una nueva imagen, borramos la anterior de Cloudinary y subimos la nueva
+        if imagen is not None and imagen.filename:
+            if producto.image_public_id:
+                cloudinary.uploader.destroy(producto.image_public_id)
+            resultado = cloudinary.uploader.upload(imagen.file)
+            producto.image_public_id = resultado.get("public_id")
+            producto.image_url = resultado.get("secure_url")
+
         db.commit()
         db.refresh(producto)
         return producto
 
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="No se pudo actualizar: existe un dato duplicado")
+        raise HTTPException(status_code=409, detail="No se pudo actualizar: dato duplicado")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al actualizar el producto: {str(e)}")
 
-# Eliminar producto
+    
+# 4. Eliminar producto (y borrar su imagen de Cloudinary si tenía una)
 @router.delete("/{id_producto}")
 def eliminar_producto(id_producto: int, db: Session = Depends(get_db)):
     producto = db.query(Producto).filter(Producto.id_producto == id_producto).first()
     if producto is None:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
+
+    if producto.image_public_id:
+        try:
+            cloudinary.uploader.destroy(producto.image_public_id)
+        except Exception:
+            pass
 
     db.delete(producto)
     db.commit()
