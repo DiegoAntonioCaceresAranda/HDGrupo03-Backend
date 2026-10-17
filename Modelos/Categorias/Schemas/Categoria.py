@@ -9,5 +9,5 @@ class CategoriaUpdate(BaseModel):
 
 class CategoriaResponse(BaseModel):
     id_categoria: int
-    nombre: str
+    nombre: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
