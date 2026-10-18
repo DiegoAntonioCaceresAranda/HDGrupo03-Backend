@@ -23,7 +23,7 @@ def listar_productos(db: Session = Depends(get_db)):
     return db.query(Producto).order_by(Producto.id_producto).all()
 
 
-# Crrear producto (POST)
+# Crear producto (POST)
 @router.post("/", response_model=ProductoResponse, status_code=201)
 def crear_producto(
     nombre: str = Form(...),
@@ -47,7 +47,7 @@ def crear_producto(
         image_public_id = None
 
         if imagen is not None and imagen.filename:
-            resultado = cloudinary.uploader.upload(imagen.file)
+            resultado = cloudinary.uploader.upload(imagen.file, folder="collinscafe_productos")
             image_public_id = resultado.get("public_id")
             image_url = resultado.get("secure_url")
 
@@ -74,12 +74,13 @@ def crear_producto(
         db.refresh(nuevo_producto)
         return nuevo_producto
 
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
+        print("ERROR REAL DE POSTGRESQL:", e.orig)
         raise HTTPException(
             status_code=409,
-            detail="No se pudo crear el producto. Verifica que el código sea único."
-        )
+            detail=f"Error de integridad: {str(e.orig)}"
+    )
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -122,7 +123,7 @@ def actualizar_producto(
         if imagen is not None and imagen.filename:
             if producto.image_public_id:
                 cloudinary.uploader.destroy(producto.image_public_id)
-            resultado = cloudinary.uploader.upload(imagen.file)
+            resultado = cloudinary.uploader.upload(imagen.file, folder="collinscafe_productos")
             producto.image_public_id = resultado.get("public_id")
             producto.image_url = resultado.get("secure_url")
 
