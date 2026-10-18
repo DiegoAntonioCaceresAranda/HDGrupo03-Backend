@@ -15,6 +15,7 @@ from Modelos.Categorias.Routers.router import router as categorias_router
 from Modelos.Dashboard.Routers.dashboard import router as dashboard_router
 from Modelos.Reportes.Routers.reportes import router as reportes_router
 
+from Modelos.Ventas.Routers.router import router as ventas_router
 
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
@@ -48,7 +49,7 @@ app.include_router(productos_router)
 app.include_router(categorias_router)
 app.include_router(dashboard_router)
 app.include_router(reportes_router)
-
+app.include_router(ventas_router)
 
 @app.get("/")
 def inicio():
