@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pwdlib import PasswordHash
 from app.database import get_db
-from Modelos.Autenticacion.Models.security import hash_password
+from Modelos.Autenticacion.Models.security import hash_password, get_current_user
 from Modelos.Usuarios.Models.usuario import Usuario
 from Modelos.Roles.Models.rol import Rol
 from ..Schemas.Usuario import UsuarioCreate, UsuarioUpdate, UsuarioResponse
@@ -18,7 +18,10 @@ password_hash = PasswordHash.recommended()
 
 # Listar usuarios
 @router.get("/", response_model=list[UsuarioResponse])
-def listar_usuarios(db: Session = Depends(get_db)):
+def listar_usuarios(
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(get_current_user)
+):
     return db.query(Usuario).order_by(
         Usuario.id_usuario
     ).all()
