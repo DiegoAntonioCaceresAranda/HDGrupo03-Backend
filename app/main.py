@@ -3,8 +3,14 @@ import cloudinary
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from Modelos.Categorias.Routers.router import router as categorias_router
 from Modelos.Productos.Routers.router import router as productos_router
+
+from Modelos.Autenticacion.Routers.auth import router as auth_router
+from Modelos.Roles.Routers.roles import router as roles_router
+from Modelos.Usuarios.Routers.usuarios import router as usuarios_router
+
 
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
 load_dotenv()
@@ -30,9 +36,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Conectamos tus módulos
 app.include_router(categorias_router)
 app.include_router(productos_router)
+
+app.include_router(auth_router)
+app.include_router(roles_router)
+app.include_router(usuarios_router)
+
 
 @app.get("/")
 def inicio():
