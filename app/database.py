@@ -1,18 +1,23 @@
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv()
+# Cargamos el .env por ruta absoluta para que funcione sin importar
+# el directorio desde el que se ejecute la app (uvicorn app.main:app).
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 # Aquí se leerá la URL de tu base de datos PostgreSQL desde tu archivo .env
 # Ejemplo: postgresql://usuario:contraseña@localhost:5432/nombre_base_datos
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+
 if not DATABASE_URL:
-    raise ValueError(
-        "No se encontró DATABASE_URL en el archivo .env"
-    )
+    raise ValueError("No se encontró DATABASE_URL en el archivo .env")
+
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
