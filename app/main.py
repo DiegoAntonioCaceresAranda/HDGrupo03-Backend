@@ -7,14 +7,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
-from Modelos.Categorias.Routers.router import router as categorias_router
-from Modelos.Productos.Routers.router import router as productos_router
-
 from Modelos.Autenticacion.Routers.auth import router as auth_router
 from Modelos.Roles.Routers.roles import router as roles_router
 from Modelos.Usuarios.Routers.usuarios import router as usuarios_router
-
-
+from Modelos.Productos.Routers.router import router as productos_router
+from Modelos.Categorias.Routers.router import router as categorias_router
 from Modelos.Dashboard.Routers.dashboard import router as dashboard_router
 from Modelos.Reportes.Routers.reportes import router as reportes_router
 
@@ -44,14 +41,11 @@ app.add_middleware(
 )
 
 
-# Conectamos tus módulos
-app.include_router(categorias_router)
-app.include_router(productos_router)
-
 app.include_router(auth_router)
 app.include_router(roles_router)
 app.include_router(usuarios_router)
-
+app.include_router(productos_router)
+app.include_router(categorias_router)
 app.include_router(dashboard_router)
 app.include_router(reportes_router)
 
