@@ -12,6 +12,8 @@ from Modelos.Roles.Routers.roles import router as roles_router
 from Modelos.Usuarios.Routers.usuarios import router as usuarios_router
 from Modelos.Categorias.Routers.router import router as categorias_router
 from Modelos.Productos.Routers.router import router as productos_router
+from Modelos.Dashboard.Routers.dashboard import router as dashboard_router
+from Modelos.Reportes.Routers.reportes import router as reportes_router
 
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
@@ -43,6 +45,8 @@ app.include_router(roles_router)
 app.include_router(usuarios_router)
 app.include_router(categorias_router)
 app.include_router(productos_router)
+app.include_router(dashboard_router)
+app.include_router(reportes_router)
 
 @app.get("/")
 def inicio():
