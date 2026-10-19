@@ -1,33 +1,51 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
 
-# Aquí se leerá la URL de tu base de datos PostgreSQL desde tu archivo .env
-# Ejemplo: postgresql://usuario:contraseña@localhost:5432/nombre_base_datos
+# Obtener la URL de conexión desde las variables de entorno
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 if not DATABASE_URL:
     raise ValueError(
-        "No se encontró DATABASE_URL en el archivo .env"
+        "No se encontró DATABASE_URL en las variables de entorno"
     )
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", ""
+
+# Usar psycopg2 como controlador de PostgreSQL
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://",
+        "postgresql+psycopg2://",
+        1
+    )
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg2://",
+        1
+    )
+
+# Crear la conexión con PostgreSQL
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True
 )
 
-
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
 Base = declarative_base()
 
 
-# Función para obtener la sesión de la base de datos en cada petición
+# Obtener una sesión de base de datos por petición
 def get_db():
-  db = SessionLocal()
-  try:
-    yield db
-  finally:
-    db.close()
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
