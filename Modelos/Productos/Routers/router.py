@@ -96,7 +96,7 @@ def actualizar_producto(
     precio_venta: Optional[float] = Form(None),
     stock: Optional[int] = Form(None),
     id_categoria: Optional[int] = Form(None),
-    imagen: Optional[UploadFile] = File(None),
+    imagen: Union[UploadFile, str, None] = File(None),
     db: Session = Depends(get_db)
 ):
     producto = db.query(Producto).filter(Producto.id_producto == id_producto).first()
@@ -111,7 +111,7 @@ def actualizar_producto(
             raise HTTPException(status_code=400, detail="La categoría seleccionada no existe")
         producto.id_categoria = id_categoria
 
-    if nombre is not None:
+    if nombre is not None and nombre.strip() != "":
         producto.nombre = nombre
     if precio_venta is not None:
         producto.precio_venta = precio_venta
@@ -119,10 +119,15 @@ def actualizar_producto(
         producto.stock = stock
 
     try:
-        # Si envían una nueva imagen, borramos la anterior de Cloudinary y subimos la nueva
-        if imagen is not None and imagen.filename:
+        if imagen is not None and hasattr(imagen, "file") and getattr(imagen, "filename", None):
+            # Si el producto ya tenía una imagen en Cloudinary, la borramos primero para no dejar basura
             if producto.image_public_id:
-                cloudinary.uploader.destroy(producto.image_public_id)
+                try:
+                    cloudinary.uploader.destroy(producto.image_public_id)
+                except Exception:
+                    pass
+            
+            # Subimos la nueva imagen a la carpeta oficial
             resultado = cloudinary.uploader.upload(imagen.file, folder="collinscafe_productos")
             producto.image_public_id = resultado.get("public_id")
             producto.image_url = resultado.get("secure_url")
@@ -137,7 +142,6 @@ def actualizar_producto(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al actualizar el producto: {str(e)}")
-
     
 # 4. Eliminar producto (y borrar su imagen de Cloudinary si tenía una)
 @router.delete("/{id_producto}")
@@ -146,12 +150,25 @@ def eliminar_producto(id_producto: int, db: Session = Depends(get_db)):
     if producto is None:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    if producto.image_public_id:
-        try:
-            cloudinary.uploader.destroy(producto.image_public_id)
-        except Exception:
-            pass
+    try:
+        # Intentamos borrar la imagen de Cloudinary si la tiene
+        if producto.image_public_id:
+            try:
+                cloudinary.uploader.destroy(producto.image_public_id)
+            except Exception:
+                pass
 
-    db.delete(producto)
-    db.commit()
-    return {"mensaje": "Producto eliminado correctamente"}
+        db.delete(producto)
+        db.commit()
+        return {"mensaje": "Producto eliminado correctamente"}
+        
+    except IntegrityError:
+        db.rollback()
+        # Esto atrapa el choque con la tabla detalle_venta y le avisa limpiamente al frontend sin romper CORS
+        raise HTTPException(
+            status_code=409, 
+            detail="No se puede eliminar el producto porque tiene ventas o registros asociados en el sistema."
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al eliminar: {str(e)}")
