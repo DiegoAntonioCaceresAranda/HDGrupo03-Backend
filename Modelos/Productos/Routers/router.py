@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 import cloudinary.uploader
 from fastapi import APIRouter, Depends, HTTPException, File, Form, UploadFile
 from sqlalchemy import text
