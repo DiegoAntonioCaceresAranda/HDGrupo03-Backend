@@ -31,9 +31,14 @@ app = FastAPI(
     description="Backend oficial con FastAPI, PostgreSQL y Cloudinary",
 )
 
+origins = [
+    "http://localhost:5173",
+    "https://collinscafegrupo03.onrender.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
