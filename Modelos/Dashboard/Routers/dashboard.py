@@ -52,7 +52,7 @@ def obtener_resumen_dashboard(db: Session = Depends(get_db)):
 
     ventas_hoy = (
         db.query(Venta)
-        .filter(Venta.fecha >= inicio_dia, Venta.fecha < fin_dia)
+        .filter(Venta.fecha >= inicio_dia, Venta.fecha < fin_dia, Venta.estado == "Completada",)
         .order_by(Venta.fecha)
         .all()
     )
@@ -103,7 +103,7 @@ def obtener_resumen_dashboard(db: Session = Depends(get_db)):
         for f in filas_stock
     ]
 
-    recientes = db.query(Venta).order_by(Venta.fecha.desc()).limit(5).all()
+    recientes = db.query(Venta).filter(Venta.estado == "Completada").order_by(Venta.fecha.desc()).limit(5).all()
     actividad_ventas = [
         ActivityItem(
             id=f"venta-{v.id_venta}",
