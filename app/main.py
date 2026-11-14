@@ -10,11 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from Modelos.Autenticacion.Routers.auth import router as auth_router
 from Modelos.Roles.Routers.roles import router as roles_router
 from Modelos.Usuarios.Routers.usuarios import router as usuarios_router
-from Modelos.Productos.Routers.router import router as productos_router
 from Modelos.Categorias.Routers.router import router as categorias_router
+from Modelos.Productos.Routers.router import router as productos_router
+from Modelos.Ventas.Routers.router import router as ventas_router
 from Modelos.Dashboard.Routers.dashboard import router as dashboard_router
 from Modelos.Reportes.Routers.reportes import router as reportes_router
-from Modelos.Ventas.Routers.ventas import router as ventas_router
 
 
 # 1. Cargamos las variables secretas que guardamos en el archivo .env
@@ -45,11 +45,12 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(roles_router)
 app.include_router(usuarios_router)
-app.include_router(productos_router)
+
 app.include_router(categorias_router)
+app.include_router(productos_router)
+app.include_router(ventas_router)
 app.include_router(dashboard_router)
 app.include_router(reportes_router)
-app.include_router(ventas_router)
 
 
 @app.get("/")
