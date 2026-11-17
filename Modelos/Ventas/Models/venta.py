@@ -31,6 +31,7 @@ class Venta(Base):
     descuento_monto = Column(Numeric(12, 2), nullable=False, server_default="0")
     impuesto = Column(Numeric(12, 2), nullable=False, server_default="0")
     total = Column(Numeric(12, 2), nullable=False, server_default="0")
+    estado = Column(String(20), nullable=False, default="completada", server_default="completada")
 
     # usuario.id_usuario no se declara como ForeignKey para no acoplar el
     # modulo de Ventas con el modulo de Usuarios (evita conflictos al mergear).

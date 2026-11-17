@@ -5,13 +5,20 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
 
-# Obtener la URL de conexión desde las variables de entorno
+
+# Aquí se leerá la URL de tu base de datos PostgreSQL desde tu archivo .env
+# Ejemplo: postgresql://usuario:contraseña@localhost:5432/nombre_base_datos
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     raise ValueError(
         "No se encontró DATABASE_URL en las variables de entorno"
     )
+
+
+
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Usar psycopg2 como controlador de PostgreSQL
 if DATABASE_URL.startswith("postgres://"):
@@ -38,6 +45,7 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine
 )
+
 
 Base = declarative_base()
 

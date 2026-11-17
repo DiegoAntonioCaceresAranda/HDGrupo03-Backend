@@ -86,6 +86,7 @@ def _ventas_en_rango(db: Session, inicio: datetime, fin: datetime) -> List[Dict]
                 "LEFT JOIN detalle_venta dv ON dv.venta_id = v.id_venta "
                 "LEFT JOIN producto p ON p.id_producto = dv.producto_id "
                 "WHERE v.fecha >= :inicio AND v.fecha < :fin "
+                "AND v.estado = 'completada' "
                 "ORDER BY v.fecha"
             ),
             {"inicio": inicio, "fin": fin},
