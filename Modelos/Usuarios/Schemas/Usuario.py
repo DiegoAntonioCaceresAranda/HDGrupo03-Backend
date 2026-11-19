@@ -1,18 +1,23 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional
+from enum import Enum
+
+class EstadoUsuario(str, Enum):
+    ACTIVO = "Activo"
+    INACTIVO = "Inactivo"
 
 class UsuarioCreate(BaseModel):
     nombre: str
     correo: EmailStr
     password: str
-    estado: str = "Activo"
+    estado: EstadoUsuario
     id_rol: int
 
 class UsuarioUpdate(BaseModel):
     nombre: Optional[str] = None
     correo: Optional[EmailStr] = None
     password: Optional[str] = None
-    estado: Optional[str] = None
+    estado: EstadoUsuario | None = None
     id_rol: Optional[int] = None
 
 
